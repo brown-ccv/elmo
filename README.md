@@ -1,6 +1,6 @@
-# React + TypeScript + Vite
+# ELMO - Energy and Load Monitoring Observatory
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React application for visualizing and monitoring CPU and GPU usage metrics with interactive charts and heatmaps. Built with TypeScript, Vite, and D3.js.
 
 Currently, two official plugins are available:
 
