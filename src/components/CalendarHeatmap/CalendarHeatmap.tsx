@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { Chip, Interval } from '@/types';
+import { toAPIDateString } from '@/utils/dateHelpers';
 
 interface DayData {
   date: string;
@@ -309,10 +310,6 @@ function CalendarHeatmap({
 
     const fetchData = async () => {
       try {
-        function toAPIDateString(date: Date) {
-          // Returns 'YYYY-MM-DDTHH:MM:SS'
-          return date.toISOString().replace(/\.\d{3}Z$/, '');
-        }
         const startStr = toAPIDateString(startDate);
         const endStr = toAPIDateString(endDate);
         const url = `https://elmo-service-210506250399.us-east4.run.app/${chipStr}/daily?start=${startStr}&end=${endStr}`;

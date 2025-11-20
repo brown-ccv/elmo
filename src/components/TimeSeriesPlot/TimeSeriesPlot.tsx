@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import * as d3 from 'd3'
 import { Chip, Interval } from '@/types'
+import { toAPIDateString } from '@/utils/dateHelpers'
 
 interface DataPoint {
     time: string;
@@ -166,11 +167,6 @@ function TimeSeriesPlot({
 
         const fetchData = async () => {
             try {
-                function toAPIDateString(date: Date) {
-                    // Returns 'YYYY-MM-DDTHH:MM:SS'
-                    return date.toISOString().replace(/\.\d{3}Z$/, '');
-                }
-
                 const intervalPath = interval === Interval.Hour ? '/hourly' :
                     interval === Interval.Day ? '/daily' : '';
                 const url = `https://elmo-service-210506250399.us-east4.run.app/${chipStr}${intervalPath}?start=${toAPIDateString(memoizedStartDate)}&end=${toAPIDateString(memoizedEndDate)}`;
