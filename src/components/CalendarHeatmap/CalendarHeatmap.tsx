@@ -16,7 +16,6 @@ interface CalendarHeatmapProps {
 function CalendarHeatmap({
   chip,
   startDate: propStartDate,
-  lineColor = "steelblue"
 }: CalendarHeatmapProps) {
   const [data, setData] = useState<DayData[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,10 +26,12 @@ function CalendarHeatmap({
 
   const chipStr = chip === Chip.Cpu ? 'cpu' : 'gpu';
 
-  // Calculate start date - use provided date or default to current year's start
+  // Calculate start date - use provided date or default to one year ago from today
   const startDate = useMemo(() => {
     if (propStartDate) return new Date(propStartDate);
-    return new Date(new Date().getFullYear(), 0, 1);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return oneYearAgo;
   }, [propStartDate]);
 
   // Calculate end date - exactly 1 year (minus 1 day) from start date
@@ -42,9 +43,7 @@ function CalendarHeatmap({
   }, [startDate]);
 
   // Title text based on date range
-  const titleText = useMemo(() => {
-    return `${chipStr.toUpperCase()} Usage`;
-  }, [chipStr]);
+  const titleText = `${chipStr.toUpperCase()} Usage`;
 
   // Generate all dates in the range to ensure complete calendar
   const allDatesInRange = useMemo(() => {
@@ -60,7 +59,9 @@ function CalendarHeatmap({
   }, [startDate, endDate]);
 
   const drawHeatmap = () => {
-    if (!svgRef.current || !data || !tooltipRef.current || !containerRef.current) return;
+    if (!svgRef.current || !data || !tooltipRef.current || !containerRef.current) {
+      return;
+    }
 
     // Clear previous content
     d3.select(svgRef.current).selectAll("*").remove();
@@ -68,14 +69,14 @@ function CalendarHeatmap({
     // Set SVG dimensions based on container
     const containerWidth = containerRef.current.clientWidth;
     const svg = d3.select(svgRef.current)
-      .attr("width", containerWidth)
-      .attr("height", Math.max(7 * (12 + 2) * 2, 230)); // Ensure minimum height
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
     const cellSize = 12;
     const cellMargin = 2;
     const fullCellSize = cellSize + cellMargin;
 
-    const cellColor = chip === Chip.Cpu ? "#1f77b4" : "#9467bd";
 
     // Get the first Sunday before or on the start date (for week alignment)
     const firstSunday = new Date(startDate);
@@ -308,8 +309,13 @@ function CalendarHeatmap({
 
     const fetchData = async () => {
       try {
-        // Use daily interval for the calendar view
-        const url = `http://localhost:3000/${chipStr}/daily?start=${startDate.toISOString()}&end=${endDate.toISOString()}`;
+        function toAPIDateString(date: Date) {
+          // Returns 'YYYY-MM-DDTHH:MM:SS'
+          return date.toISOString().replace(/\.\d{3}Z$/, '');
+        }
+        const startStr = toAPIDateString(startDate);
+        const endStr = toAPIDateString(endDate);
+        const url = `https://elmo-service-210506250399.us-east4.run.app/${chipStr}/daily?start=${startStr}&end=${endStr}`;
         console.log('Fetching calendar data...', url);
 
         const response = await fetch(url, {
@@ -361,18 +367,16 @@ function CalendarHeatmap({
     };
   }, [chipStr, startDate, endDate]);
 
-  // Handle window resize
+  // Handle window resize and container size changes
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && svgRef.current) {
         // Set SVG dimensions based on container
-        const width = containerRef.current.clientWidth;
-
-        // Set SVG dimensions
         const svg = d3.select(svgRef.current);
         svg
-          .attr("width", width)
-          .attr("height", Math.max(7 * (12 + 2) * 2, 230));
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("preserveAspectRatio", "xMidYMid meet");
 
         // Only redraw if we have data
         if (data) {
@@ -381,17 +385,39 @@ function CalendarHeatmap({
       }
     };
 
-    // Initial size
-    handleResize();
+    // Use ResizeObserver to detect container size changes
+    let resizeObserver: ResizeObserver | null = null;
+    if (containerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Add a small delay for initial render to ensure container dimensions are available
+    const initialTimer = setTimeout(() => {
+      handleResize();
+    }, 100);
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(initialTimer);
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
   }, [data]);
 
   // Draw heatmap when data changes
   useEffect(() => {
     if (data) {
-      drawHeatmap();
+      // Add a small delay to ensure container is properly sized
+      const timer = setTimeout(() => {
+        drawHeatmap();
+      }, 50);
+
+      return () => clearTimeout(timer);
     }
   }, [data]);
 
@@ -405,8 +431,7 @@ function CalendarHeatmap({
       style={{
         position: 'relative',
         width: '100%',
-        height: '100%',
-        minHeight: '230px',
+        height: '230px',
         overflow: 'hidden'
       }}
     >

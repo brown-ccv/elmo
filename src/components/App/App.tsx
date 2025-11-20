@@ -11,13 +11,17 @@ function App() {
 
   return (
     <>
-      <CalendarHeatmap chip={Chip.Cpu} startDate={new Date('2024-04-01')} />
+      <div style={{ marginBottom: '2rem' }}>
+        <CalendarHeatmap chip={Chip.Cpu} />
+      </div>
 
-      <CalendarHeatmap chip={Chip.Gpu} startDate={new Date('2024-04-01')} />
+      <div style={{ marginBottom: '2rem' }}>
+        <CalendarHeatmap chip={Chip.Gpu} />
+      </div>
 
-      <TimeSeriesPlot chip={Chip.Cpu} startDate={new Date('2023-01-01')} endDate={new Date('2025-04-01')} lineColor="#1f77b4" />
+      <TimeSeriesPlot chip={Chip.Cpu} lineColor="#1f77b4" />
 
-      <TimeSeriesPlot chip={Chip.Gpu} startDate={new Date('2023-01-01')} endDate={new Date('2025-04-01')} lineColor="#9467bd" />
+      <TimeSeriesPlot chip={Chip.Gpu} lineColor="#9467bd" />
 
       <Footer />
     </>
