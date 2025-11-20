@@ -10,7 +10,7 @@ interface DataPoint {
 
 // Default dates outside component to prevent recreation
 const DEFAULT_END_DATE = new Date();
-const DEFAULT_START_DATE = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+const DEFAULT_START_DATE = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000); // One year ago
 
 interface TimeSeriesPlotProps {
     chip: Chip;
@@ -166,10 +166,14 @@ function TimeSeriesPlot({
 
         const fetchData = async () => {
             try {
+                function toAPIDateString(date: Date) {
+                    // Returns 'YYYY-MM-DDTHH:MM:SS'
+                    return date.toISOString().replace(/\.\d{3}Z$/, '');
+                }
 
                 const intervalPath = interval === Interval.Hour ? '/hourly' :
                     interval === Interval.Day ? '/daily' : '';
-                const url = `http://localhost:3000/${chipStr}${intervalPath}?start=${memoizedStartDate.toISOString()}&end=${memoizedEndDate.toISOString()}`;
+                const url = `https://elmo-service-210506250399.us-east4.run.app/${chipStr}${intervalPath}?start=${toAPIDateString(memoizedStartDate)}&end=${toAPIDateString(memoizedEndDate)}`;
                 console.log('Starting fetch...', url);
                 const response = await fetch(url, {
                     method: 'GET',
