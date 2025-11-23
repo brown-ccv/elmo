@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import { Chip, Interval } from '@/types';
 import { toAPIDateString } from '@/utils/dateHelpers';
 
+// Constants
+const INITIAL_RESIZE_DELAY_MS = 100;
+
 interface DayData {
   date: string;
   value: number;
@@ -394,7 +397,7 @@ function CalendarHeatmap({
     // Add a small delay for initial render to ensure container dimensions are available
     const initialTimer = setTimeout(() => {
       handleResize();
-    }, 100);
+    }, INITIAL_RESIZE_DELAY_MS);
 
     window.addEventListener('resize', handleResize);
     return () => {
